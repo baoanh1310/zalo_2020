@@ -136,3 +136,11 @@ dmypy.json
 *.tar
 *.pth
 *.gz
+
+# json files
+*.json
+
+# image files
+*.png
+*.jpg
+*.jpeg
