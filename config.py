@@ -1,1 +1,1 @@
-PUBLIC_TEST_DIR = './train_public_test'
+PUBLIC_TEST_DIR = './public_test'
