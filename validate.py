@@ -158,7 +158,7 @@ def validate(args):
         for i, (input, target) in enumerate(loader):
             with amp_autocast():
                 output = bench(input, img_info=target)
-            evaluator.add_predictions(output, target)
+            evaluator.add_predictions(input, output, target)
 
             # measure elapsed time
             batch_time.update(time.time() - end)

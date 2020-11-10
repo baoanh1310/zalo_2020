@@ -9,6 +9,8 @@ import numpy as np
 from .distributed import synchronize, is_main_process, all_gather_container
 from pycocotools.cocoeval import COCOeval
 
+from torchvision import transforms
+
 # FIXME experimenting with speedups for OpenImages eval, it's slow
 #import pyximport; py_importer, pyx_importer = pyximport.install(pyimport=True)
 import effdet.evaluation.detection_evaluator as tfm_eval
@@ -19,6 +21,7 @@ _logger = logging.getLogger(__name__)
 
 __all__ = ['CocoEvaluator', 'PascalEvaluator', 'OpenImagesEvaluator', 'create_evaluator']
 
+resnet_pretrained_path = "./resnet_30v2epoch.pth.rar"
 
 class Evaluator:
 
@@ -29,7 +32,7 @@ class Evaluator:
         self.img_indices = []
         self.predictions = []
 
-    def add_predictions(self, detections, target):
+    def add_predictions(self, input, detections, target):
         if self.distributed:
             if self.distributed_device is None:
                 # cache for use later to broadcast end metric
@@ -41,6 +44,30 @@ class Evaluator:
                 return
         else:
             img_indices = target['img_idx']
+
+        resnet_model = torch.load(resnet_pretrained_path)
+        resnet_model.eval()
+        transform = transforms.Compose(
+            [transforms.ToTensor(),
+             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+            )
+
+        for i in range(0, input.size()[0]):
+            img = input[i, :, :, :].squeeze(0)
+            detection = detections[i, :, :].squeeze(0)
+            for j in range(0, detection.size()[0]):
+                coordinates = detection[j, :].squeeze(0)
+                im = img[]
+
+                if self.pred_yxyx:
+                    # to xyxy
+                    img_dets[:, 0:4] = img_dets[:, [1, 0, 3, 2]]
+                # to xywh
+                img_dets[:, 2] -= img_dets[:, 0]
+                img_dets[:, 3] -= img_dets[:, 1]
+                im = transform(im)
+
+                score = resnet_model(im)
 
         detections = detections.cpu().numpy()
         img_indices = img_indices.cpu().numpy()
