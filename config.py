@@ -1,0 +1,1 @@
+PUBLIC_TEST_DIR = './train_public_test'
